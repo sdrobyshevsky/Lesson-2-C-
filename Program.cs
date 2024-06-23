@@ -135,3 +135,82 @@ namespace WebApplication.Controllers
         }
     }
 }
+
+
+// Разработка web-приложения на C# (семинары) 
+// Урок 2. Работа с данными (CSV + статика), маппинг и кэширование 
+// Доработайте контроллер, реализовав в нем метод возврата CSV-файла с товарами. 
+// Доработайте контроллер, реализовав статичный файл со статистикой работы кэш. Сделайте его доступным по ссылке.
+// Перенесите строку подключения для работы с базой данных в конфигурационный файл приложения.
+
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProductAPI.Controllers
+{
+[Route("api/[controller]")]
+[ApiController]
+public class ProductController : ControllerBase
+{
+private readonly List _products = new List();
+
+[HttpGet("csv")]
+public async Task GetCsv()
+{
+StringBuilder sb = new StringBuilder();
+sb.AppendLine("Id,Name,Price");
+
+foreach (var product in _products)
+{
+sb.AppendLine($"{product.Id},{product.Name},{product.Price}");
+}
+
+byte[] byteArray = Encoding.UTF8.GetBytes(sb.ToString());
+MemoryStream stream = new MemoryStream(byteArray);
+
+return File(stream, "text/csv", "products.csv");
+}
+
+[HttpGet("statistic")]
+public IActionResult GetStatic()
+{
+string staticContent = "Cache statistics: xyz"; // Замените на реальные данные о статистике кэша
+byte[] byteArray = Encoding.UTF8.GetBytes(staticContent);
+MemoryStream stream = new MemoryStream(byteArray);
+
+return File(stream, "text/plain", "cache-statistic.txt");
+}
+}
+
+public class Product
+{
+public int Id { get; set; }
+public string Name { get; set; }
+public decimal Price { get; set; }
+}
+}
+```
+
+// В данном коде были добавлены методы `GetCsv` для возврата CSV-файла с товарами и `GetStatic` для возврата статичного файла с статистикой кэша. 
+// Также были добавлены соответствующие маршруты для доступа к этим методам.
+// Чтобы перенести строку подключения к базе данных в конфигурационный файл, можно использовать файл `appsettings.json` следующим образом:
+
+{
+"ConnectionStrings": {
+"DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=MyDatabase;Trusted_Connection=True;"
+}
+}
+```
+
+// Затем в классе `Startup.cs` необходимо добавить чтение этой строки из конфигурации:
+
+public void ConfigureServices(IServiceCollection services)
+{
+string connectionString = Configuration.GetConnectionString("DefaultConnection");
+
+// Используйте connectionString для подключения к базе данных
+}
+```
